@@ -130,32 +130,36 @@ setwd("./192_HIest/")
 
 # Load data
 # change , for . 
-HIclass192 <- read.csv(file="HItest_nogrid_1000int_point.csv",header = TRUE, row.names = 1,sep=';')
-HIclass79 <- read.csv(file="../79_HIest/HItest_nogrid_1000int_point.csv",header = TRUE,
+# have two columns determined the colours of each category
+HIclass192 <- read.csv(file="HItest_nogrid_1000int_inorder_points.csv",header = TRUE,row.names = 1,sep=';')
+
+HIclass79 <- read.csv(file="../79_HIest/HItest_nogrid_1000int_inorder_point.csv",header = TRUE,
                       row.names = 1,sep=';')
 
+
 # 192 loci
-pdf(paste("../../Desktop/192orange.pdf", sep=""), width=6, height=5)
-p <- ggplot(HIclass192, aes(1-S,H)) +
-  geom_point(position = position_jitter(seed = 1, width = 0.03), 
-             shape=21, size=4, col='darkorange', fill='orange') + 
+pdf(paste("../../Desktop/192_pures.pdf", sep=""), width=6, height=5)
+p <- ggplot(HIclass192,aes(1-S, H)) +
+  geom_point(position = position_jitter(seed = 0.8, width = 0.02, height=0.03),
+             shape=21, size=4, colour = factor(HIclass192$Fill), fill=factor(HIclass192$Colour)) + 
+  scale_color_manual(values = sample_colors) +
   scale_y_continuous(expand = expansion(c(0.08, 0.2)))+
   geom_segment(x = 0, y = 0, xend =0.5 , yend = 1) +
   geom_segment(x = 0.5, y = 1, xend =1 , yend = 0)  +
   geom_segment(x = 0, y = 0, xend =1 , yend = 0) +
   labs(x = "Hybrid index", y = "Interspecific heterozygosity")
 p + theme(
-panel.background = element_rect(fill = "white"),
-panel.border = element_blank(),
-panel.grid.major = element_blank(),
-panel.grid.minor = element_blank())
+  panel.background = element_rect(fill = "white"),
+  panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank())
 dev.off()
 
 # 79 loci
-pdf(paste("../../Desktop/79orange.pdf", sep=""), width=6, height=5)
+pdf(paste("../../Desktop/79_pures.pdf", sep=""), width=6, height=5)
 p <- ggplot(HIclass79, aes(1-S,H)) +
-  geom_point(position = position_jitter(seed = 1, width = 0.03), 
-             shape=21, size=4, col='darkorange', fill='orange')+ 
+  geom_point(position = position_jitter(seed = 1, width = 0.02, height=0.03), 
+             shape=21, size=4, colour = factor(HIclass79$Fill), fill=factor(HIclass79$Colour))+ 
   scale_y_continuous(expand = expansion(c(0.07, 0.07)))+
   geom_segment(x = 0, y = 0, xend =0.5 , yend = 1) +
   geom_segment(x = 0.5, y = 1, xend =1 , yend = 0)  +
