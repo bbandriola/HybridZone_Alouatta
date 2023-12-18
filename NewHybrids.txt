@@ -1,0 +1,56 @@
+
+#####################
+### VCF filtering ###
+#####################
+
+# Filter sites with higher FST values and less than 30% of missing ind
+awk '$5 >= 0.7' Subset_LessThan40perMissingInd_FstHigherOrEqual07.txt > snps_fst07_40N_missingInd.txt
+awk '$5 >= 0.7' Subset_LessThan50perMissingInd_FstHigherOrEqual07.txt > snps_fst07_50N_missingInd.txt
+
+# Subset 1
+vcftools --vcf 60missing_NovosNomes-bugios_samp_sng1_SNP_FINAL.vcf.recode.vcf --positions 200loci_positions2keep_60missing_NovosNomes-bugios_samp_sng1_SNP_FINAL_fst07_inVCF.txt --recode --out 200loci_positions2keep_60missing_NovosNomes-bugios_samp_sng1_SNP_FINAL_fst07
+vcftools --vcf ./original_vcf/NovosNomes-bugios_samp_sng1_SNP.vcf --positions positions_07FST_40missingInd.txt --recode --out NovosNomes-bugios_allsamples_07FST_40missingInd
+
+
+# Generate genopop 
+# 193 loci with all ind with fst higher than 0.7 (50% missing data)
+java -Xmx1024m -Xms512m -jar PGDSpider2-cli.jar -inputfile 193loci_higherFST_NovosNomes-bugios_samp_sng1_SNP.recode.vcf -inputformat VCF -outputfile output_genefile_193loci_higherFST_NovosNomes-bugios_samp_sng1_SNP -outputformat GENEPOP -spid vcf2newhybrids.spid
+# 79 loci with all ind with fst higher than 0.7 (40% missing data)
+java -Xmx1024m -Xms512m -jar PGDSpider2-cli.jar -inputfile NovosNomes-bugios_allsamples_07FST_40missingInd.recode.vcf -inputformat VCF -outputfile output_genefile_79loci_higherFST_NovosNomes-bugios_allsamples_07FST_40missingInd -outputformat GENEPOP -spid vcf2newhybrids.spid
+
+######################
+### Run newhybrids ###
+######################
+
+# 192 loci with all ind with fst higher than 0.7
+softwares/newhybrids/newhybrids-no-gui-linux.exe --data-file output_genefile_193loci_higherFST_NovosNomes-bugios_samp_sng1_SNP --gtyp-cat-file ../TwoGensGtypFreq.txt --no-gui
+softwares/newhybrids/newhybrids-no-gui-linux.exe --data-file output_genefile_193loci_higherFST_NovosNomes-bugios_samp_sng1_SNP --gtyp-cat-file ../TwoGensGtypFreq.txt --no-gui --num-sweeps 100000 --burn-in 10000
+# 79 loci with all ind with fst hight than 0.7
+softwares/newhybrids/newhybrids-no-gui-linux.exe --data-file output_genefile_79loci_higherFST_NovosNomes-bugios_allsamples_07FST_40missingInd --gtyp-cat-file ../TwoGensGtypFreq.txt --no-gui --num-sweeps 100000 --burn-in 10000
+output_genefile_79loci_higherFST_NovosNomes-bugios_allsamples_07FST_40missingInd
+
+############################
+### Check chain and plot ###
+############################
+
+# Parallel hybrid 
+devtools::install_github("bwringe/parallelnewhybrid", force=TRUE)
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(parallel, plyr, stringr, tidyr)
+
+library(parallelnewhybrid)
+
+# plot parallelhybrid results
+# nh_plotR.R
+## Use plotR to visualize the cumulative probability of assignment for for each individual in the PofZ file specified by "NHResults"
+
+pdf(paste("192_NewHybrids.pdf", sep=""), width=12, height=3)
+nh_plotR2(NHResults = "aa-193_PofZ.txt") ## plot results will be displayed by R 
+dev.off()
+
+#nh_multiplotR.R
+## Use multplotR to visualize the cumulative probability of assignment for each individual for multiple NewHybrids analyses. The function will plot the results in all folders within the directory specified by "NHResults". i.e. all results in the folders within the "NH.Results" folder created by parallelnh_xx
+nh_multiplotR(NHResults = "~/Desktop/Projetos/Bugio/Hybriddetective/Runs/NH.Results/") ## the function will create a folder called "NewHybrids Plots" within the directory specified by "NHResults", and the plots will be saved to that folder. 
+## precheckR will check for NewHybrids results in all folders within the folder specified by "PreDir". i.e. all results in the folders within the "NH.Results" folder created by parallelnh_xx from the package parallelnewhybrid
+nh_preCheckR(PreDir = "~/Desktop/NH.Results/", propCutOff = 0.5, PofZCutOff = 0.1) ## run with the default cut-off values; these could have been left blank.
